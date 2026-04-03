@@ -1,36 +1,28 @@
-# Algonquin Pet Store (On Steroids)
-Welcome to the Algonquin Pet Store (On Steroids) application.
+Vijay Xavier Walter.     
+041276252.     
+CST8915 Full-stack Cloud-native Development.      
+Winter 2026.      
 
-This sample demo app consists of a group of containerized microservices that can be easily deployed into a Kubernetes cluster. This is meant to show a realistic scenario using a polyglot architecture, event-driven design, and common open source back-end services (eg - RabbitMQ, MongoDB). The application also leverages OpenAI's models to generate product descriptions and images. This can be done using either [Azure OpenAI](https://learn.microsoft.com/azure/ai-services/openai/overview) or [OpenAI](https://openai.com/).
+---
 
-This application is inspired by Azure Kubernetes Service (AKS) quickstart demo [Azure Kubernetes Service (AKS) Docs](https://learn.microsoft.com/en-us/azure/aks/).
+## Demo Video
 
-> [!NOTE]
-> This is not meant to be an example of perfect code to be used in production, but more about showing a realistic application running in kubernetes. 
-
-## Architecture
-
-The application has the following services: 
-
-| Service | Description | Github Repo | Docker Image |
-| --- | --- | --- | --- |
-| `store-front` | Web app for customers to place orders (Vue.js) | [store-front-L8](https://github.com/ramymohamed10/store-front-L8) | [ramymohamed/store-front-l8](https://hub.docker.com/r/ramymohamed/store-front-l8) |
-| `store-admin` | Web app used by store employees to view orders in queue and manage products (Vue.js) | [store-admin-L8](https://github.com/ramymohamed10/store-admin-L8) | [ramymohamed/store-admin-l8](https://hub.docker.com/r/ramymohamed/store-admin-l8) |
-| `order-service` | This service is used for placing orders (Javascript) | [order-service-L8](https://github.com/ramymohamed10/order-service-L8) | [ramymohamed/order-service-l8](https://hub.docker.com/r/ramymohamed/order-service-l8) |
-| `product-service` | This service is used to perform CRUD operations on products (Rust) | [product-service-L8](https://github.com/ramymohamed10/product-service-L8) | [ramymohamed/product-service-l8](https://hub.docker.com/r/ramymohamed/product-service-l8) |
-| `makeline-service` | This service handles processing orders from the queue and completing them (Golang) | [makeline-service-L8](https://github.com/ramymohamed10/makeline-service-L8) | [ramymohamed/makeline-service-l8](https://hub.docker.com/r/ramymohamed/makeline-service-l8) |
-| `ai-service` | Optional service for adding generative text and graphics creation (Python) | [ai-service-L8](https://github.com/ramymohamed10/ai-service-L8) | [ramymohamed/ai-service-l8](https://hub.docker.com/r/ramymohamed/ai-service-l8) |
-| `rabbitmq` | RabbitMQ for an order queue | [rabbitmq](https://github.com/docker-library/rabbitmq) | [rabbitmq:3-management](https://hub.docker.com/_/rabbitmq) |
-| `mongodb` | MongoDB instance for persisted data | [mongodb](https://github.com/docker-library/mongo) | [mongo:4.2](https://hub.docker.com/_/mongo) |
-| `virtual-customer` | Simulates order creation on a scheduled basis (Rust) | [virtual-customer-L8](https://github.com/ramymohamed10/virtual-customer-L8) | [ramymohamed/virtual-customer-l8](https://hub.docker.com/r/ramymohamed/virtual-customer-l8) |
-| `virtual-worker` | Simulates order completion on a scheduled basis (Rust) | [virtual-worker-L8](https://github.com/ramymohamed10/virtual-worker-L8) | [ramymohamed/virtual-worker-l8](https://hub.docker.com/r/ramymohamed/virtual-worker-l8) |
+🎥 [Watch Demo Video] (https://youtu.be/OqkhgxNFrHE)
 
 
-![Logical Application Architecture Diagram](assets/Algonquin%20Pet%20Store%20On%20Steroids.png)
+# Task 2 – Written Explanation
 
-## Run the app on Azure Kubernetes Service (AKS)
+## MongoDB high availability and persistence
+MongoDB was updated to improve availability and data persistence. The StatefulSet was changed from 1 replica to 3 replicas so multiple MongoDB pods run in the cluster. A `volumeClaimTemplates` section was added so each MongoDB pod gets its own PersistentVolumeClaim (PVC). This ensures database data is stored on persistent storage and is not lost when a pod restarts.
 
-You can use the kubernetes YAML files provided in the [Deployment Files](./Deployment%20Files/) folder to deploy the app to an AKS cluster.
+The MongoDB service was also changed to a **headless service** using `clusterIP: None`. This gives stable DNS names such as `mongodb-0.mongodb`, `mongodb-1.mongodb`, and `mongodb-2.mongodb`, which is required for replica-based deployments and improves availability.
 
+## RabbitMQ persistence
+RabbitMQ was updated so queue data and messages are stored persistently. A persistent volume was mounted at `/var/lib/rabbitmq`, which is the directory RabbitMQ uses to store its data. A `volumeClaimTemplates` block was added to create a PVC for the RabbitMQ pod.
 
+The existing ConfigMap mount for RabbitMQ plugins was kept, so the container still loads the required configuration while also storing queue data on persistent storage.
 
+## Azure managed services
+A good Azure-managed replacement for self-hosted MongoDB is **Azure Cosmos DB for MongoDB**. Its purpose is to provide a fully managed MongoDB-compatible database service. It is a good fit because it offers built-in scalability, backups, and high availability without managing database pods manually.
+
+A good Azure-managed replacement for RabbitMQ is **Azure Service Bus**. Its purpose is to provide reliable message queuing and messaging between services. It is a good fit because it supports scaling, durability, and availability, while removing the need to manage RabbitMQ infrastructure inside Kubernetes.
